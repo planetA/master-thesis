@@ -13,7 +13,7 @@
 ] {scrreprt}
 
 % You should select either american or british instead of english here:
-\usepackage[ngerman,english]{babel}
+\usepackage[american,ngerman]{babel}
 \usepackage{fontspec}
 
 \usepackage[pdftex,
@@ -24,24 +24,26 @@ linkbordercolor={0.75 0.75 1},
 urlbordercolor={0.75 0.75 1},
 pdfborder={0.75 0.75 1},plainpages=false,pdfpagelabels=true]{hyperref}
 \hypersetup{%
-  pdftitle={Dein Titel},
-  pdfauthor={Otto Mustermann},
+  pdftitle={Simulation of a Scheduling Algorithm for DAG-based Task Models},
+  pdfauthor={Maksym Planeta},
   pdfkeywords={foo, bar},
 }
 
 \input{preamble/packages.tex}
 \addbibresource{own.bib}
+\addbibresource{/home/desertfox/research/refs.bib} 
 \input{preamble/color.tex}
 \input{preamble/style.tex}
 \input{preamble/newcommands.tex}
 
 % If you know when you will hand in your thesis, enter the date here.
-%\date{30. April 2009}
-%\newcommand{\printdate}{\@date}
+\date{27. April 2015}
+\newcommand{\printdate}{\@date}
 
 \begin{document}
 
 \pagenumbering{Roman}
+\newtheorem{definition}{Definition}
 
 \input{content/00_title.tex}
 
@@ -51,7 +53,7 @@ pdfborder={0.75 0.75 1},plainpages=false,pdfpagelabels=true]{hyperref}
 \input{content/01_disclaimer.tex}
 
 % NOTE: if you selected british or american above, change that here too
-\selectlanguage{english}
+\selectlanguage{american}
 
 \begin{abstract}
 \input{content/02_abstract.tex}
@@ -94,6 +96,12 @@ pdfborder={0.75 0.75 1},plainpages=false,pdfpagelabels=true]{hyperref}
 \iffalse
     % an aid for Kile autocompletion
     \bibliography{own.bib}
+    \bibliography{/home/desertfox/research/refs.bib} 
 \fi
 
 \end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

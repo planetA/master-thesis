@@ -12,70 +12,107 @@
 % den Rest der Arbeit. Meist braucht man mindestens 4 Seiten dafür, mehr
 % als 10 Seiten liest keiner.
 
-\todo{adopt title page}
 
-\todo{adopt disclaimer}
+It is known that problem of scheduling parallel programs onto
+multiprocessor computer in its general form is
+NP-complete~\cite{Ullman1975}. There are know constrained models,
+which allow to determine optimal schedule in polynomial
+time~\cite{Hu1961, Coffman1972, Papadimitriou1979}.  But simplicity of
+these models barely allows their utilization for scheduling of real
+parallel applications.
 
-\todo{write introduction}
+Parallelization of an application requires extensive knowledge about
+program structure. There exist a variety of methods to declare program
+structure, that is convenient for the programmer, but also allows to
+effectively schedule the application on multiprocessor system. Such
+parallelization methods among others are fork-join pattern[links],
+message-passing systems[links], map-reduce frameworks[links],
+future-based parallelism[links], asynchronous lambda
+approaches[links].
 
-\section{A Section}
+These methods differ in their API, in their granularity and
+functionality. But all they have one common idea: order sequential
+sections of the application in such temporal order that respects their
+mutual dependencies. This process is called
+\emph{scheduling}. Sequential sections represent parts of actual
+execution trace of the program and have corresponding starting and
+finish time. The same part of the application code can appear as
+several sequential sections.
 
-Referencing other chapters: \ref{sec:state} \ref{sec:design}
-\ref{sec:implementation} \ref{sec:evaluation} \ref{sec:futurework}
-\ref{sec:conclusion}
+Dependencies between sequential sections represent transfers of data
+that is calculated in precedent sections and used as an input by
+subsequent ones. Relations between sequential sections can be modeled
+as a graph, and thus all the dependencies go from past to future this
+graph has no cycles. Thus, such model is called Directed Acyclic Graph
+(DAG).
 
-\begin{table}[htp]
-  \centering
-  \begin{tabular}{lrr}
-    \textbf{Name} & \textbf{Y} & \textbf{Z} \\
-    \hline
-    \textit{Foo} & 20,614 & \unit[23]{\%} \\
-    \textit{Bar} & 9,914 & \unit[11]{\%} \\
-    \textit{Foo + Bar} & 30,528 & \unit[34]{\%} \\
-    \hline
-    \textit{total} & 88,215 & \unit[100]{\%} \\
+DAG is a common and well-studied way to represent the execution of
+parallel application \cite{zheng20131673,
+  Blumofe:1996:ADD:237502.237574}.
 
-  \end{tabular}
-  \caption[Some interesting numbers]{Various very important looking numbers and sums.}
-  \label{tab:numbers}
-\end{table}
 
-More text referencing Table~\ref{tab:numbers}.
+\section{Motivation}
 
-\section{Another Section}
+\section{Document Structure}
 
-\begin{figure}[tbp]
-  \centering
-  \includegraphics[width=0.8\textwidth]{images/squirrel}
-  \caption[Short description]{A long description of this squirrel figure.
-  Image taken from
-  \url{http://commons.wikimedia.org/wiki/File:Sciurus-vulgaris_hernandeangelis_stockholm_2008-06-04.jpg}}
-  \label{fig:squirrel}
-\end{figure}
 
-Citing \cite{bellard2005qfa} other documents \cite{bellard2005qfa, boileau06}
-and Figure~\ref{fig:squirrel}.
 
-Something with umlauts and a year/month date:
-\cite{becher04:_feurig_hacken_mit_firew}.
+% Referencing other chapters: \ref{sec:state} \ref{sec:design}
+% \ref{sec:implementation} \ref{sec:evaluation} \ref{sec:futurework}
+% \ref{sec:conclusion}
 
-And some online resources: \cite{green04}, \cite{patent:4819234}
+% \begin{table}[htp]
+%   \centering
+%   \begin{tabular}{lrr}
+%     \textbf{Name} & \textbf{Y} & \textbf{Z} \\
+%     \hline
+%     \textit{Foo} & 20,614 & \unit[23]{\%} \\
+%     \textit{Bar} & 9,914 & \unit[11]{\%} \\
+%     \textit{Foo + Bar} & 30,528 & \unit[34]{\%} \\
+%     \hline
+%     \textit{total} & 88,215 & \unit[100]{\%} \\
 
-\section{Yet Another Section}
+%   \end{tabular}
+%   \caption[Some interesting numbers]{Various very important looking numbers and sums.}
+%   \label{tab:numbers}
+% \end{table}
 
-\todo{add content}
+% More text referencing Table~\ref{tab:numbers}.
 
-\begin{figure}[tbp]
- \missingfigure{Come up with a mindblowing figure.}
- \caption{A mindblowing figure}
- \label{fig:todo}
-\end{figure}
+% \section{Another Section}
 
-\section{Test commands}
+% \begin{figure}[tbp]
+%   \centering
+%   \includegraphics[width=0.8\textwidth]{images/squirrel}
+%   \caption[Short description]{A long description of this squirrel figure.
+%   Image taken from
+%   \url{http://commons.wikimedia.org/wiki/File:Sciurus-vulgaris_hernandeangelis_stockholm_2008-06-04.jpg}}
+%   \label{fig:squirrel}
+% \end{figure}
 
-\drops \LLinux \NOVA \QEMU
-\texttt{memcpy}
-A sentence about BASIC. And a correctly formatted one about ECC\@.
+% Citing \cite{bellard2005qfa} other documents \cite{bellard2005qfa, boileau06}
+% and Figure~\ref{fig:squirrel}.
+
+% Something with umlauts and a year/month date:
+% \cite{becher04:_feurig_hacken_mit_firew}.
+
+% And some online resources: \cite{green04}, \cite{patent:4819234}
+
+% \section{Yet Another Section}
+
+% \todo{add content}
+
+% \begin{figure}[tbp]
+%  \missingfigure{Come up with a mindblowing figure.}
+%  \caption{A mindblowing figure}
+%  \label{fig:todo}
+% \end{figure}
+
+% \section{Test commands}
+
+% \drops \LLinux \NOVA \QEMU
+% \texttt{memcpy}
+% A sentence about BASIC. And a correctly formatted one about ECC\@.
 
 \cleardoublepage
 

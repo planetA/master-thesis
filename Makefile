@@ -17,7 +17,7 @@ DOC_TEX_ADD ?= preamble/packages.tex \
                $(wildcard content/*.tex)
 
 # your bibtex databases
-DOC_BIB     ?= own.bib
+DOC_BIB     ?= ~/research/refs.bib
 
 # images
 DOC_IMG_JPG  = images/squirrel.jpg # you can specify multiple images here

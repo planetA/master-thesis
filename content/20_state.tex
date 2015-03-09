@@ -29,12 +29,361 @@
 % Kapitel wird in der Regel zuerst geschrieben und ist das Einfachste
 % (oder das Schwerste weil erste).
 
-\ldots state of the art \ldots
+This thesis presents a new algorithm for scheduling DAG-based parallel
+applications. The algorithm attempts to fill the niche between two
+classes of algorithms for parallel applications. Algorithms from the
+first class are aware of the DAG structure of the application and try
+to use this knowledge to optimize the resulting schedule. We call this
+class of algorithms \emph{DAG-algorithms}. Representatives of another class are
+unaware of DAG structure of the application and make scheduling
+decision without any advance knowledge of future program behavior. We
+call this class of algorithms \emph{ready queue algorithms}.
 
-\todo{write state}
+In following section these two algorithms and their corresponding
+system models will be described in detail. Additionally there will be
+given deeper classification of DAG aware algorithms. Several important
+representatives of each class will be outlined.
+
+\section{Ready queue algorithms}
+
+First, we will start with dynamic algorithms. The reason for that is
+that they are simpler, they have simpler system model and can be
+easily ported to the environment where dag-algorithms act.We call
+algorithm dynamic if it does not have any prospective knowledge of a
+program structure. Hence, it does not have a phase before actual
+program execution, where it can build up helper data structures.
+
+Program is still assumed to consist of sequential pieces called
+\emph{jobs}. Jobs have sequential dependencies between each other. If
+two jobs have noncontradictory dependency sets, they can run in
+parallel on different \emph{processing elements (PE)}.  Parallel
+program can be modeled as a DAG where \emph{nodes} represent jobs and
+edges represent \emph{edges}.
+
+In ready queue algorithms DAG nodes appear for the scheduler only when
+they become \emph{ready}, i.~e. all their dependencies get
+satisfied. A job that is currently being executed on a PE is called
+\emph{active}.
+
+\begin{definition}
+  If execution of a job $A$ depends on another job $B$, job $A$ is
+  called a \emph{child} of a job $B$. And job $B$ is called a
+  \emph{parent} of a job $A$.
+\end{definition}
+
+\subsection{Global queue algorithms}
+\label{sec:global_queue}
+
+The trivial system model assumes that there exist single globally
+accessible list of nodes, which state is \emph{ready}. Such a list is
+called \emph{ready list} \footnote{Also known as \emph{ready
+    queue}.}. Whenever there is a PE with no active job, it tries to
+grab one from a ready list.
+
+Yet simple, but unrealistic, this model does not allow to achieve high
+overall
+performance. \citeauthor{anderson1989performance}~\cite{anderson1989performance}
+have \todo{Which number to use? Singular for a ``paper''? Plural for
+  the ``authors''? Now it is a mess.} shown that contention for the
+system bus can drastically decreases both system latency and
+throughput. Various researches have shown the influence of the data
+locality on the number of CPU cache
+misses~\cite{Spoonhower:2009:BNP:1583991.1584019,Herlihy:2014:WFC:2555243.2555257,Squillante1993}
+and page faults~\cite{Blumofe:1996:ADD:237502.237574}. This increases
+shared memory bus traffic and contention and bring significant
+performance penalty. \cite{Squillante1993} has shown that if child
+jobs tend to stay on the same CPU as parents, performance penalty
+grows slower with increased number of PEs.
+
+\subsection{Work stealing algorithms}
+\label{sec:work_stealing}
+
+There exist two major dynamic scheduling paradigms where jobs tend to
+stay where parents have been run: \emph{work stealing} and \emph{work
+  sharing}~\cite{Blumofe:1999:SMC:324133.324234}. To enforce this
+principle each PE maintains its own \emph{local ready list}. In work
+stealing paradigm, PEs take or \emph{steal} jobs from ready lists of
+other PEs. And in work sharing ones, PEs pass or \emph{share} jobs from
+their ready list to the ready lists of other PEs.
+
+Principles of work sharing algorithms are similar to work stealing
+ones, but the latter ensure less communication
+overhead~\cite{Blumofe:1999:SMC:324133.324234}, thus we will describe
+only work stealing paradigm in detail.
+
+Work stealing algorithms are subject of extensive
+research~\cite{Spoonhower:2009:BNP:1583991.1584019,Blumofe:1999:SMC:324133.324234,Acar:2000:DLW:341800.341801,Arora:1998:TSM:277651.277678},
+but also have number of practical
+implementations~\cite{Halstead:1984:IML:800055.802017,Blumofe:1995:CEM:209937.209958}.
+Execution environment where typical work stealing algorithm acts has
+following structure. There exist a set of PEs that can compute
+parallel tasks independently. Each PE has its own ready list. When a
+PE finishes the job, some of the children of this job can become
+ready. If it happens, than these children are added to the local
+\emph{ready queue} of the PE.
+
+Each PE is capable to communicate with any other PE. This
+communication could involve data transfers required to complete the
+job, but also PEs are capable to communicate to exchange the jobs in
+their working queues. The process of exchanging jobs among ready
+queues is the essence of scheduling for dynamic scheduling algorithms.
+
+A PE attempts to steal a job only when its own queue becomes
+empty\footnote{Such a work stealing schedulers are called
+  \emph{parsimonious}~\cite{Spoonhower:2009:BNP:1583991.1584019}.}.
+
+\todo{Write more here}
+
+\subsection{Delay scheduling}
+\label{sec:delay}
+
+\cite{zaharia2010delay} propose an interesting ready queue algorithm for clusters
+
+\section{DAG-algorithms}
+\label{sec:dag_algs}
+
+If a program structure is known beforehand, it is possible to develop
+more complicated algorithms. Number of examples are know in the
+research~\cite{wu1990hypertool,bittencourt2010dag,wu2000mcp,adam1974,kwok1999static,zheng20131673,Topcuoglu2002}. All
+these algorithms differ in the approach proposed but as well in the
+model where the algorithm operates. An example of algorithm types
+classification is given in~\cite{kwok1999static}.
+
+Further in this section we will give an overview of popular algorithms
+and system models. Although we separate scheduling heuristics in
+several subsections it is important to mention that they often can be
+combined in the same algorithm to improve overall performance. Good
+example of such combination is a combination of clustering heuristic
+(see Section~\ref{sec:clustering}) and task duplication heuristic (see
+Section~\ref{sec:duplication}). An example of such combination is LCTD
+algorithm~\cite{chen1993performance}. \todo{This paper is not
+  available online. Is legit to cite it? Too reference and description from Kwok.}
+
+\subsection{System model}
+\label{sec:model}
+
+Besides structure of the DAG itself important characteristic of the
+system model of the algorithm is the information that is known about
+the jobs and job communication. In simplest case, we can assume that
+anything, except job precedence constraints is irrelevant. In this
+situation jobs are assumed to have \emph{unit} computational costs
+(i.~e. all computational costs are equal for all the
+jobs)~\cite{Hu1961,adam1974}. If computation costs are under
+consideration, than node weight can have arbitrary value. And this
+value represents time required to complete a job on a PE. If
+communication is irrelevant edge weight is either uniform for all the
+edges or zero. UET-UCT (unit estimated time-unit communication time)
+is a typical model in research area~\cite{finta1996scheduling,
+  andronikos2000optimal}, which assumes both computation and
+communication costs have unit weight.
+
+The popular model which operates with arbitrary node and edge weights
+is called \emph{macro dataflow}
+model~\cite{yang1992pyrros,wu1990hypertool}.  Without explicitly
+naming it, this model can also be found in numerous other
+papers~\cite{adam1974, kwok1999static, sakellariou2004low}\todo{Should
+  I mention all the papers having this property?}. Macro dafaflow
+model works as follows. The execution runs respecting the dependencies
+between the jobs in a DAG. Each job runs exclusively on certain PE for
+the time, which depends on the computational\todo{computational or
+  computation?}  costs of the job. These costs can have arbitrary
+finite value. Before a job starts it should receive data from its
+parent. Time required to accomplish this operation depends on the
+communication costs of the job and also can have arbitrary finite
+value. When two a parent and a child run on the same PE communication
+between them takes no time.
+
+Macro dataflow model yet simple, but often precise enough to
+approximate execution of parallel program and multiprocessor system
+running it. The assumption of zero communication costs within the same
+PE is realistic because throughput of the network is much lower than
+the throughput of physical ram. Moreover, it is often the case, that
+data should not be moved, if job consuming the data resides on the
+same PE as the job generated the data.
+
+Modern systems are often heterogeneous. This requires algorithms to
+cope with heterogeneous systems as well. Computing system can have to
+kinds of heterogeneity, which can also be combined in the same system:
+heterogeneity of PEs~\cite{grajcar1999genetic, Topcuoglu2002,
+  arabnejad2014list} and heterogeneity of
+communication~\cite{arabnejad2014list,
+  bittencourt2010dag}. Heterogeneity of PEs means that instead of
+single node weight, each job has defined table of execution times for
+each PE that exist in the system. Different communication channels
+between PEs imply different time requirements for a data transfers,
+which happen to fulfill job's dependency requirements.
+
+System topology also can bring significant complication for an
+algorithm. Being fully connected graph (\emph{clique}) in the simplest
+case, connections between PEs can form arbitrary structures. Clique,
+Hypercube, Fat Tree are popular topologies. But sometimes combinations
+of famous structures or irregular structures should be handled. The
+reasons for such a diversity are expenses, throughput, latency and
+reliability, which vary for different topologies\todo{No need for
+  refs. This is general knowledge. Right?}. Irregular structures occur
+when ownership of a network is decentralized\todo{refs}.
+
+Depending on existence of the restriction of the DAG algorithms are
+divided in \emph{arbitrary graph structure} algorithms and
+\emph{restricted graph structure}
+algorithms. \citeauthor{Hu1961}~\cite{Hu1961} \todo{What is the better
+  form to make such quotations?} requires the program to have a
+tree-structure and the jobs to have unit computational
+costs. \citeauthor{Coffman1972}~\cite{Coffman1972} allows jobs to have
+arbitrary computation costs, but number of PEs is restricted to
+two. \citeauthor{finta1996scheduling}~\cite{finta1996scheduling}
+proposes an algorithm for arbitrary structure DAG within UET-UCT
+model, but only for two
+PEs. \citeauthor{Papadimitriou1979}~\cite{Papadimitriou1979} proposed
+to schedule an interval-ordered task graph with uniform jobs
+computation costs to an arbitrary number of
+PEs. \citeauthor{Malewicz:2005:PSC:1073970.1073981}~\cite{Malewicz:2005:PSC:1073970.1073981} propose
+an algorithm that permits DAG to have complex structure, but requires
+it to be \emph{narrow} (i.~e. the width of the DAG is at most
+constant). These algorithms represent algorithms with restricted graph
+structure, but allow to create an optimal schedule in polynomial time.
+
+Another group of restricted graph structure algorithms does not allow
+to build an optimal schedule in polynomial time, but has softer DAG
+constraints. Computations where any two give jobs which have common
+parent also have a common child are called \emph{fully strict} or
+\emph{well-structured}~\cite{Blumofe:1999:SMC:324133.324234}. This
+kind of structure is also called fork-join parallelism, because it can
+be guaranteed by fork-join paradigm of an operating system. The
+guarantee achieved, because it is the parent thread is the one who
+always joins with the child thread. These kinds of algorithms put
+boundaries on the worst case execution
+time\cite{Acar:2000:DLW:341800.341801,Arora:1998:TSM:277651.277678,Blelloch:1999:PES:301970.301974},
+additional number of cache
+misses~\cite{Spoonhower:2009:BNP:1583991.1584019,Herlihy:2014:WFC:2555243.2555257,Acar:2000:DLW:341800.341801,Squillante1993},
+additional number of page
+faults~\cite{Blumofe:1996:ADD:237502.237574}, and memory space
+requirements~\cite{Blumofe:1996:ADD:237502.237574,Blelloch:1999:PES:301970.301974}.
+
+Getting program structure can become a cumbersome
+task~\cite{wilhelm2008worst}. Typical way to gather such information
+is either static
+analysis~\cite{casse2006otawa,ferdinand2001reliable,gustafsson2003tool}
+or program execution
+monitoring~\cite{davis1991multiprocessor,puschner1998testing}\todo{How
+  many examples do I typically need when I note some fact? Is it OK if
+  a reference appears only once?}. Getting precise information about
+future program execution exaggerated, because of unpredictable and
+nondeterministic situations that can occur in run-time
+~\cite{canon2008comparative,Tongsima2000,Malewicz:2005:PSC:1073970.1073981,ferreira2008characterizing,maheswaran1998dynamic,mahjoub2011computational}. Ability
+to sustain unpredictable situations called
+\emph{robustness}~\cite{canon2008comparative}. Various researches
+define robustness in different manner, comparison of different metrics
+representing robustness presented in ~\cite{canon2007comparison}.
+
+There are various approaches to tolerate unpredictability of the
+system. It is possible to make computation and communication time
+overestimation to improve robustness of the schedule~\todo{refs}, but
+the disadvantage is bigger slacking time, and thus increasing
+scheduling overhead. Dynamic algorithms, which make decisions on the
+fly, basing on the information that is available in current moment of
+time, are naturally tolerant to unexpected jitters in task execution
+times~\todo{refs}. A downside is that dynamic algorithms usually have
+worse performance in comparison to dag-aware algorithms, in situation
+when execution does not suffer from uncertainties. \emph{Dynamic task
+  rescheduling}~\cite{sakellariou2004low,maheswaran1998dynamic} is a
+hybrid approach that combines scheduling based on \textit{a priori}
+knowledge of the DAG and scheduling based on current information. Such
+algorithms tend show better performance in presence of uncertainties,
+if they are based on better dag-aware
+algorithm~\cite{canon2008comparative}.
+
+\subsection{List scheduling}
+\label{sec:list}
+
+After we talked about differences in system models, which affect how
+algorithm works, we present description of algorithms itself. As it
+was mentioned in section~\ref{sec:intro}, scheduling problem is
+NP-complete, thus algorithms that we are going to describe are
+heuristics, which do not give an optimal solution in a strict sense,
+but some suboptimal one. The typical scheduling algorithm heuristic
+called \emph{list scheduling}~\cite{adam1974, Papadimitriou1979,
+  schutten1996list, kwok1999static, falzon2012enhancing,
+  arabnejad2014list}.
+
+The goal of list scheduling algorithms is to minimize (or maximize)
+certain parameter of a resulting schedule:
+\emph{makespan}~\cite{arabnejad2014list}, \emph{slack}~\todo{refs}, energy
+consumption~\todo{refs}, etc. The idea behind list scheduling
+heuristic is that it build a \emph{priority list} of all the nodes in
+the DAG according to some metric. Later the scheduler performs an
+assignment of the jobs to PEs in the order of jobs priorities. When a
+job is assigned to a node it is removed from the priority list. The
+assignment can take place either off-line (before actual
+execution)~\todo{refs} or online~\todo{refs}.
+
+If assignment takes place online there can happen following
+situation. Assume there is a PE available for execution and some jobs
+from the priority list are in ready state. But the most prioritized
+job is not ready, because has some dependencies not met yet. This can
+happen if top job in priority list depends on a job which is currently
+being run on a PE. There are two solutions for this situation. In the
+first one, scheduler waits until the top job becomes ready. In the
+other one, scheduler takes the most prioritized jobs among the ready
+ones. If scheduler never intentionally waits it is called
+\emph{eager}~\cite{canon2007comparison}.
+
+\subsection{Clustering heuristics}
+\label{sec:clustering}
+
+
+Clustering
+heuristics~\cite{singh2008workflow,liou1996efficient,kwok1999static,gerasoulis1992comparison,mahjoub2011computational}
+assume that the number of PEs is effectively unlimited. Thus the goal
+of minimizing the makespan is reduced to the problem of optimizing
+communication costs. In the beginning clustering algorithms assign
+each job a separate PE (\emph{cluster} in clustering algorithms
+terminology). In the process of looking for the better schedule an
+algorithm unites the clusters. The unification of the clusters means
+assignment of the jobs from different clusters to the same PE. When
+two jobs, which have direct dependency between each other, are put on
+the same cluster, communication costs between these jobs become zero.
+
+When number of physical PEs is not less than the number of clusters
+assigning PEs to cluster is a trivial problem. But when number of
+clusters is bigger than number of PEs additional step called
+\emph{mapping} is required to accomplish scheduling process. During
+this step scheduler has to map clusters to physical PEs introducing
+the least possible degradation of the resulting schedule. Considering
+the fact that the quality of the resulting schedule highly depends on
+this step~\cite{kwok1999static}, it is an open question,
+if putting the actual number of PEs out of scope is worth it.
+
+\subsection{Task duplication}
+\label{sec:duplication}
+
+The problem that task duplication aims to solve called \emph{max-min
+  problem}. Both the heuristic and the problem were presented
+by \citeauthor{kruatrachue1987static}~\cite{kruatrachue1987static}.
+
+\cite{shin2008task}
+\todo{Add about task duplication?}
+
+\subsection{Guided random search based algorithms}
+\label{sec:random}
+
+Stochastic approach~\cite{zheng20131673,grajcar1999genetic}
+
+\subsection{Static algorithms}
+\label{sec:static}
+
+\todo{Add about task insertion}
+
+\subsection{Dynamic algorithms}
+\label{sec:dynamic}
+
+\subsection{Lookahead algorithms}
+\label{sec:lookahead_state}
+
+\cite{arabnejad2014list} \cite{bittencourt2010dag}
 
 \cleardoublepage
 
 %%% Local Variables:
-%%% TeX-master: "diplom"
+%%% TeX-master: "../diplom"
 %%% End:
