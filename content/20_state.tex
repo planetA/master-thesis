@@ -103,8 +103,10 @@ stay where parents have been run: \emph{work stealing} and \emph{work
   sharing}~\cite{Blumofe:1999:SMC:324133.324234}. To enforce this
 principle each PE maintains its own \emph{local ready list}. In work
 stealing paradigm, PEs take or \emph{steal} jobs from ready lists of
-other PEs. And in work sharing ones, PEs pass or \emph{share} jobs from
-their ready list to the ready lists of other PEs.
+other PEs. And in work sharing ones, PEs pass or \emph{share} jobs
+from their ready list to the ready lists of other PEs. If a PE
+attempts to steal a job only when its own queue becomes empty it is
+called \emph{parsimonious}~\cite{Spoonhower:2009:BNP:1583991.1584019}.
 
 Principles of work sharing algorithms are similar to work stealing
 ones, but the latter ensure less communication
@@ -112,27 +114,22 @@ overhead~\cite{Blumofe:1999:SMC:324133.324234}, thus we will describe
 only work stealing paradigm in detail.
 
 Work stealing algorithms are subject of extensive
-research~\cite{Spoonhower:2009:BNP:1583991.1584019,Blumofe:1999:SMC:324133.324234,Acar:2000:DLW:341800.341801,Arora:1998:TSM:277651.277678},
-but also have number of practical
-implementations~\cite{Halstead:1984:IML:800055.802017,Blumofe:1995:CEM:209937.209958}.
-Execution environment where typical work stealing algorithm acts has
-following structure. There exist a set of PEs that can compute
-parallel tasks independently. Each PE has its own ready list. When a
-PE finishes the job, some of the children of this job can become
-ready. If it happens, than these children are added to the local
-\emph{ready queue} of the PE.
+research~\cite{Spoonhower:2009:BNP:1583991.1584019,
+  Blumofe:1999:SMC:324133.324234, Acar:2000:DLW:341800.341801,
+  Arora:1998:TSM:277651.277678}, but also have number of practical
+implementations~\cite{Halstead:1984:IML:800055.802017,
+  Blumofe:1995:CEM:209937.209958}.  Execution environment where
+typical work stealing algorithm acts has following structure. There
+exist a set of PEs that can compute parallel tasks independently. Each
+PE has its own ready list. When a PE finishes the job, some of the
+children of this job can become ready. If it happens, than these
+children are added to the local \emph{ready queue} of the PE.
 
 Each PE is capable to communicate with any other PE. This
 communication could involve data transfers required to complete the
 job, but also PEs are capable to communicate to exchange the jobs in
 their working queues. The process of exchanging jobs among ready
 queues is the essence of scheduling for dynamic scheduling algorithms.
-
-A PE attempts to steal a job only when its own queue becomes
-empty\footnote{Such a work stealing schedulers are called
-  \emph{parsimonious}~\cite{Spoonhower:2009:BNP:1583991.1584019}.}.
-
-\todo{Write more here}
 
 \subsection{Delay scheduling}
 \label{sec:delay}
@@ -219,9 +216,9 @@ case, connections between PEs can form arbitrary structures. Clique,
 Hypercube, Fat Tree are popular topologies. But sometimes combinations
 of famous structures or irregular structures should be handled. The
 reasons for such a diversity are expenses, throughput, latency and
-reliability, which vary for different topologies\todo{No need for
-  refs. This is general knowledge. Right?}. Irregular structures occur
-when ownership of a network is decentralized\todo{refs}.
+reliability, which vary for different topologies. Irregular structures
+occur when ownership of a network is decentralized\todo{No need for
+  refs. This is general knowledge. Right?}.
 
 Depending on existence of the restriction of the DAG algorithms are
 divided in \emph{arbitrary graph structure} algorithms and
@@ -270,28 +267,36 @@ monitoring~\cite{davis1991multiprocessor,puschner1998testing}\todo{How
   a reference appears only once?}. Getting precise information about
 future program execution exaggerated, because of unpredictable and
 nondeterministic situations that can occur in run-time
-~\cite{canon2008comparative,Tongsima2000,Malewicz:2005:PSC:1073970.1073981,ferreira2008characterizing,maheswaran1998dynamic,mahjoub2011computational}. Ability
-to sustain unpredictable situations called
+~\cite{canon2008comparative, Tongsima2000,
+  Malewicz:2005:PSC:1073970.1073981, ferreira2008characterizing,
+  maheswaran1998dynamic, mahjoub2011computational}. Ability to sustain
+unpredictable situations called
 \emph{robustness}~\cite{canon2008comparative}. Various researches
 define robustness in different manner, comparison of different metrics
 representing robustness presented in ~\cite{canon2007comparison}.
 
 There are various approaches to tolerate unpredictability of the
 system. It is possible to make computation and communication time
-overestimation to improve robustness of the schedule~\todo{refs}, but
+overestimation to improve robustness of the schedule~\todo{refs. Found
+  this in canon, but he provides no ref that such thing exist.}, but
 the disadvantage is bigger slacking time, and thus increasing
 scheduling overhead. Dynamic algorithms, which make decisions on the
 fly, basing on the information that is available in current moment of
 time, are naturally tolerant to unexpected jitters in task execution
-times~\todo{refs}. A downside is that dynamic algorithms usually have
-worse performance in comparison to dag-aware algorithms, in situation
-when execution does not suffer from uncertainties. \emph{Dynamic task
+times~\todo{refs. Need proof?}. A downside is that dynamic algorithms
+usually have worse performance in comparison to dag-aware algorithms,
+in situation when execution does not suffer from
+uncertainties. \emph{Dynamic task
   rescheduling}~\cite{sakellariou2004low,maheswaran1998dynamic} is a
 hybrid approach that combines scheduling based on \textit{a priori}
 knowledge of the DAG and scheduling based on current information. Such
 algorithms tend show better performance in presence of uncertainties,
 if they are based on better dag-aware
 algorithm~\cite{canon2008comparative}.
+
+Internet-based computing (IC) \cite{cordasco2010extending,
+  rosenberg2004scheduling}\todo{Do I need this at all?} Cordasco is
+bad paper.
 
 \subsection{List scheduling}
 \label{sec:list}
@@ -308,14 +313,16 @@ called \emph{list scheduling}~\cite{adam1974, Papadimitriou1979,
 
 The goal of list scheduling algorithms is to minimize (or maximize)
 certain parameter of a resulting schedule:
-\emph{makespan}~\cite{arabnejad2014list}, \emph{slack}~\todo{refs}, energy
-consumption~\todo{refs}, etc. The idea behind list scheduling
+\emph{makespan}~\cite{arabnejad2014list},
+\emph{fairness}~\cite{zaharia2010delay}, energy
+efficiency~\cite{zong2013green}, etc. The idea behind list scheduling
 heuristic is that it build a \emph{priority list} of all the nodes in
 the DAG according to some metric. Later the scheduler performs an
 assignment of the jobs to PEs in the order of jobs priorities. When a
 job is assigned to a node it is removed from the priority list. The
-assignment can take place either off-line (before actual
-execution)~\todo{refs} or online~\todo{refs}.
+assignment can take place either \emph{statically} (before actual
+program execution execution) or \emph{dynamically} (while program is
+actually running).
 
 If assignment takes place online there can happen following
 situation. Assume there is a PE available for execution and some jobs
@@ -382,6 +389,16 @@ Stochastic approach~\cite{zheng20131673,grajcar1999genetic}
 
 \cite{arabnejad2014list} \cite{bittencourt2010dag}
 
+\begin{quote}
+  In a recent study [16], it was observed that the per- formance of a
+  commonly cited list scheduling heuristic, HEFT [14], is affected
+  significantly by the approach fol- lowed to assign weights to the
+  nodes and edges of the graph.  In an extreme case, the makespan that
+  HEFT returned for a certain graph was
+  47.2% worse than the makespan that
+  would be obtained if a different approach to compute the weights of
+  the nodes and edges of the graph was cho- sen \cite{zhao2003experimental}.
+\end{quote}
 \cleardoublepage
 
 %%% Local Variables:
