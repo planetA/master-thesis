@@ -19,6 +19,18 @@
 \usepackage{todonotes}
 \usepackage{xspace}
 \usepackage{setspace}
+\usepackage{tikz}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{subcaption}
+
+\ifdefined\pdffontattr% \ifdefined is part of the e-TeX extension, which is part of any modern LaTeX compiler. 
+    \immediate\pdfobj stream file {umsa.cmap}
+    {\usefont{U}{msa}{m}{n}\pdffontattr\font{/ToUnicode \the\pdflastobj\space 0 R}}
+    \immediate\pdfobj stream file {umsb.cmap}
+    {\usefont{U}{msb}{m}{n}\pdffontattr\font{/ToUnicode \the\pdflastobj\space 0 R}}
+\fi
 
 % use this one last
 % (redefines some macros for compatibility with KOMAScript)

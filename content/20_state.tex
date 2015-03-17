@@ -34,33 +34,41 @@ applications. The algorithm attempts to fill the niche between two
 classes of algorithms for parallel applications. Algorithms from the
 first class are aware of the DAG structure of the application and try
 to use this knowledge to optimize the resulting schedule. We call this
-class of algorithms \emph{DAG-algorithms}. Representatives of another class are
-unaware of DAG structure of the application and make scheduling
-decision without any advance knowledge of future program behavior. We
-call this class of algorithms \emph{ready queue algorithms}.
+class of algorithms \emph{DAG-algorithms}. Representatives of another
+class are unaware of DAG structure of the application and make
+scheduling decision without any advance knowledge of future program
+behavior. Since the scheduling decision is made in runtime, this class
+of algorithms called \emph{dynamic
+  algorithms}~\cite{arabnejad2014list}.
 
-In following section these two algorithms and their corresponding
-system models will be described in detail. Additionally there will be
-given deeper classification of DAG aware algorithms. Several important
-representatives of each class will be outlined.
+In following section these two types of algorithms and their
+corresponding system models will be described. Starting with brief
+overview, the algorithms are outlined in detail further. The section
+ends with particular description of several notorious algorithms of
+different types.
 
-\section{Ready queue algorithms}
+\section{Dynamic algorithms}
 
-First, we will start with dynamic algorithms. The reason for that is
-that they are simpler, they have simpler system model and can be
-easily ported to the environment where dag-algorithms act.We call
-algorithm dynamic if it does not have any prospective knowledge of a
-program structure. Hence, it does not have a phase before actual
-program execution, where it can build up helper data structures.
+First, we will start with dynamic algorithms\footnote{Not to be
+  confused with dynamic list scheduling algorithms, described in
+  Section~\ref{sec:dynamic}.}\footnote{Also know as \emph{just-in-time
+    algorithms}.}. The reason for that is that they are simpler, they
+have simpler system model and can be easily ported to the environment
+where dag-algorithms act.We call algorithm dynamic if it does not have
+any prospective knowledge of a program structure. Hence, it does not
+have a phase before actual program execution, where it can build up
+helper data structures.
 
 Program is still assumed to consist of sequential pieces called
 \emph{jobs}. Jobs have sequential dependencies between each other. If
 two jobs have noncontradictory dependency sets, they can run in
-parallel on different \emph{processing elements (PE)}.  Parallel
+parallel on different \emph{processor elements (PE)}.  Parallel
 program can be modeled as a DAG where \emph{nodes} represent jobs and
-edges represent \emph{edges}.
+edges represent \emph{edges}. Because nodes in a DAG correspond to
+jobs in a parallel application terms nodes and jobs are used
+interchangeably.
 
-In ready queue algorithms DAG nodes appear for the scheduler only when
+In dynamic algorithms DAG nodes appear for the scheduler only when
 they become \emph{ready}, i.~e. all their dependencies get
 satisfied. A job that is currently being executed on a PE is called
 \emph{active}.
@@ -84,7 +92,7 @@ Yet simple, but unrealistic, this model does not allow to achieve high
 overall
 performance. \citeauthor{anderson1989performance}~\cite{anderson1989performance}
 have \todo{Which number to use? Singular for a ``paper''? Plural for
-  the ``authors''? Now it is a mess.} shown that contention for the
+  the ``authors''? Now it is a mess. Matthias: Authors have ...} shown that contention for the
 system bus can drastically decreases both system latency and
 throughput. Various researches have shown the influence of the data
 locality on the number of CPU cache
@@ -122,7 +130,7 @@ implementations~\cite{Halstead:1984:IML:800055.802017,
 typical work stealing algorithm acts has following structure. There
 exist a set of PEs that can compute parallel tasks independently. Each
 PE has its own ready list. When a PE finishes the job, some of the
-children of this job can become ready. If it happens, than these
+children of this job can become ready. If it happens, then these
 children are added to the local \emph{ready queue} of the PE.
 
 Each PE is capable to communicate with any other PE. This
@@ -130,11 +138,6 @@ communication could involve data transfers required to complete the
 job, but also PEs are capable to communicate to exchange the jobs in
 their working queues. The process of exchanging jobs among ready
 queues is the essence of scheduling for dynamic scheduling algorithms.
-
-\subsection{Delay scheduling}
-\label{sec:delay}
-
-\cite{zaharia2010delay} propose an interesting ready queue algorithm for clusters
 
 \section{DAG-algorithms}
 \label{sec:dag_algs}
@@ -166,7 +169,7 @@ anything, except job precedence constraints is irrelevant. In this
 situation jobs are assumed to have \emph{unit} computational costs
 (i.~e. all computational costs are equal for all the
 jobs)~\cite{Hu1961,adam1974}. If computation costs are under
-consideration, than node weight can have arbitrary value. And this
+consideration, node weight can have arbitrary value. And this
 value represents time required to complete a job on a PE. If
 communication is irrelevant edge weight is either uniform for all the
 edges or zero. UET-UCT (unit estimated time-unit communication time)
@@ -216,9 +219,10 @@ case, connections between PEs can form arbitrary structures. Clique,
 Hypercube, Fat Tree are popular topologies. But sometimes combinations
 of famous structures or irregular structures should be handled. The
 reasons for such a diversity are expenses, throughput, latency and
-reliability, which vary for different topologies. Irregular structures
-occur when ownership of a network is decentralized\todo{No need for
-  refs. This is general knowledge. Right?}.
+reliability, which vary for different topologies. Irregular
+structures, like Internet or SETI@home, occur when ownership of a
+network is decentralized\todo{No need for refs. This is general
+  knowledge. Right?}.
 
 Depending on existence of the restriction of the DAG algorithms are
 divided in \emph{arbitrary graph structure} algorithms and
@@ -269,7 +273,8 @@ future program execution exaggerated, because of unpredictable and
 nondeterministic situations that can occur in run-time
 ~\cite{canon2008comparative, Tongsima2000,
   Malewicz:2005:PSC:1073970.1073981, ferreira2008characterizing,
-  maheswaran1998dynamic, mahjoub2011computational}. Ability to sustain
+  maheswaran1998dynamic% , mahjoub2011computational
+}. Ability to sustain
 unpredictable situations called
 \emph{robustness}~\cite{canon2008comparative}. Various researches
 define robustness in different manner, comparison of different metrics
@@ -277,22 +282,31 @@ representing robustness presented in ~\cite{canon2007comparison}.
 
 There are various approaches to tolerate unpredictability of the
 system. It is possible to make computation and communication time
-overestimation to improve robustness of the schedule~\todo{refs. Found
-  this in canon, but he provides no ref that such thing exist.}, but
-the disadvantage is bigger slacking time, and thus increasing
-scheduling overhead. Dynamic algorithms, which make decisions on the
-fly, basing on the information that is available in current moment of
-time, are naturally tolerant to unexpected jitters in task execution
-times~\todo{refs. Need proof?}. A downside is that dynamic algorithms
-usually have worse performance in comparison to dag-aware algorithms,
-in situation when execution does not suffer from
-uncertainties. \emph{Dynamic task
-  rescheduling}~\cite{sakellariou2004low,maheswaran1998dynamic} is a
-hybrid approach that combines scheduling based on \textit{a priori}
-knowledge of the DAG and scheduling based on current information. Such
-algorithms tend show better performance in presence of uncertainties,
-if they are based on better dag-aware
+overestimation to improve robustness of the
+schedule~\cite{canon2008comparative}, but the disadvantage is bigger
+slacking time, and thus increasing scheduling overhead. Dynamic
+algorithms, which make decisions on the fly, basing on the information
+that is available in current moment of time, are naturally tolerant to
+unexpected jitters in task execution times~\todo{refs. Need proof?}. A
+downside is that dynamic algorithms usually have worse performance in
+comparison to dag-aware algorithms, in situation when execution does
+not suffer from uncertainties.
+
+\emph{Dynamic task rescheduling}~\cite{sakellariou2004low,
+  maheswaran1998dynamic} is a hybrid approach that combines scheduling
+based on \textit{a priori} knowledge of the DAG and scheduling based
+on current information. Such algorithms tend show better performance
+in presence of uncertainties, if they are based on better dag-aware
 algorithm~\cite{canon2008comparative}.
+
+If nature of unpredictability is known, for instance deviations of
+expected job execution time and expected execution times are defined,
+\emph{stochastic scheduling} algorithms~\cite{zheng20131673,
+  tang2011stochastic} come into play. These schedulers are similar to
+convenient list schedulers, but assign job priorities with respect to
+the level of uncertainty of execution time of each job. In the end
+they prepare more priority list of the jobs, which is expected to be
+more robust, than the result of typical scheduling algorithm.
 
 Internet-based computing (IC) \cite{cordasco2010extending,
   rosenberg2004scheduling}\todo{Do I need this at all?} Cordasco is
@@ -322,7 +336,9 @@ assignment of the jobs to PEs in the order of jobs priorities. When a
 job is assigned to a node it is removed from the priority list. The
 assignment can take place either \emph{statically} (before actual
 program execution execution) or \emph{dynamically} (while program is
-actually running).
+actually running). For further details on static list scheduling see
+Section~\ref{sec:static}. For further details on dynamic list
+scheduling see Section~\ref{sec:dynamic}.
 
 If assignment takes place online there can happen following
 situation. Assume there is a PE available for execution and some jobs
@@ -339,12 +355,12 @@ ones. If scheduler never intentionally waits it is called
 \label{sec:clustering}
 
 
-Clustering
-heuristics~\cite{singh2008workflow,liou1996efficient,kwok1999static,gerasoulis1992comparison,mahjoub2011computational}
-assume that the number of PEs is effectively unlimited. Thus the goal
-of minimizing the makespan is reduced to the problem of optimizing
-communication costs. In the beginning clustering algorithms assign
-each job a separate PE (\emph{cluster} in clustering algorithms
+Clustering heuristics~\cite{singh2008workflow, liou1996efficient,
+  kwok1999static, gerasoulis1992comparison% ,mahjoub2011computational
+} assume that the number of PEs is effectively unlimited. Thus the
+goal of minimizing the makespan is reduced to the problem of
+optimizing communication costs. In the beginning clustering algorithms
+assign each job a separate PE (\emph{cluster} in clustering algorithms
 terminology). In the process of looking for the better schedule an
 algorithm unites the clusters. The unification of the clusters means
 assignment of the jobs from different clusters to the same PE. When
@@ -365,40 +381,873 @@ if putting the actual number of PEs out of scope is worth it.
 \label{sec:duplication}
 
 The problem that task duplication aims to solve called \emph{max-min
-  problem}. Both the heuristic and the problem were presented
-by \citeauthor{kruatrachue1987static}~\cite{kruatrachue1987static}.
+  problem}. Both the heuristic and the problem were presented by
+\citeauthor{kruatrachue1987static}~\cite{kruatrachue1987static}. The
+essence of max-min problem lies in an observation that within macro
+dataflow model distribution of the jobs to bigger amount of PEs leads
+to bigger communication delays. After certain number of PEs makespan
+of the program even tends to increase if maximal number of them is
+used, because the fraction of communication costs grows and starts to
+dominate in total execution costs.
 
-\cite{shin2008task}
-\todo{Add about task duplication?}
+Task duplication attempts to reduce communication overhead by cloning
+the task that introduce much of communication costs. These task are
+distributed among several PEs, so that more communication happens
+locally. Thus task duplication heuristic takes advantage of
+parallelism and reduces the communication delays at the same time.
+
+New: \cite{shin2008task} Basic: \cite{ahmad1994new} \todo{Do I add
+  concrete example of TP? Basic one from 80's? Recent but specific?
+  Both? ML: Not required}
 
 \subsection{Guided random search based algorithms}
 \label{sec:random}
 
-Stochastic approach~\cite{zheng20131673,grajcar1999genetic}
+Deterministic algorithms have efficiency imbalance for different
+configurations of parallel application workflow. With very few luck
+performance degradation can be significant. Guided random search based
+(GRSB) algorithms attempt to solve this problem by introducing
+randomization making corner cases less likely. Different types of
+these algorithms include genetic
+algorithms~\cite{grajcar1999genetic, aggarwal2005, wang2009,
+  kolodziej2013}, Tabu search, Simulated Annealing,
+etc.~\cite{braun2001comparison}.
 
-\subsection{Static algorithms}
+The idea of GRDB algorithms lies in generating many possible schedules
+and later selecting the better ones. The process of generation and
+selection is iterative. Typically a guided random search based
+algorithm starts from generating some random
+schedules~\cite{grajcar1999genetic, aggarwal2005, wang2009,
+  kolodziej2013}, but is also possible to base a GRDB algorithm on a
+schedule obtained by a deterministic
+algorithm~\cite{braun2001comparison}. The number of iterations of
+algorithm can be volatile: algorithm runs as long as it is possible to
+bring a sensible improvement to the schedule. Or it can be fixed to
+some constant number -- property of the algorithm.
+
+Randomness is not a silver bullet. As with deterministic algorithms,
+stochastic ones heavily depend on the quality of the metrics that are
+used to compare intermediate schedules and the process of generating
+schedules for next generation. Sometimes huge number of iterations is
+required to get acceptable quality schedule, which can increase
+scheduling overhead dramatically.
+
+\subsection{Static list scheduling}
 \label{sec:static}
 
-\todo{Add about task insertion}
+When a program structure is known in advance, it is possible to
+preliminary apply scheduling policy and prepare necessary data
+structure before actual execution, for instance at compile time. Later
+simple runtime mechanism can fetch the rule to be make the scheduling
+decision from aforementioned data structures. Such scheduler is called
+\emph{static}\footnote{Also known as \emph{full-ahead}
+  scheduler.}. Static list scheduling algorithms are popular in
+research~\cite{adam1974, kwok1999static, wu1997parallelization} and
+are often combined with other scheduling heuristics.
 
-\subsection{Dynamic algorithms}
+The scheduling algorithm first arranges the jobs into the list of the
+nodes. This list has jobs ordered according to some priority. Priority
+choice depends on the algorithm and its computation complexity varies,
+but it is important to choose priority in a way that will keep jobs in
+the list topologically sorted. If this condition is met and if the
+queue of yet to be scheduled jobs contains at least one ready job,
+than the most prioritized ready job will be on the top.
+
+After creating a priority queue of the jobs, the scheduling algorithm
+consists of two steps~\cite{kwok1999benchmarking}:
+\begin{enumerate}
+\item Remove the top node from the scheduling queue;
+\item Allocate the node to a processor that allows the earliest start-time.
+\end{enumerate}
+
+Initial assumption is that jobs are scheduled in a way that every new
+job appears in the end of the local schedule of a PE. It is simple to
+implement, but can be improved by \emph{insertion
+  heuristic}\footnote{Also known as \emph{insertion approach}.
+}~\cite{kruatrachue1987static}. In arbitrary structured DAG
+dependencies can be such, that schedule will have \emph{holes}. Holes
+are periods between job executions when a PE has no job to run. Since
+simple static algorithm does ignores holes, they arise fast. The
+scheduler with insertion heuristic assign jobs to PEs considering
+holes and tries to fill them up, when possible.
+
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}[xscale=1,transform shape, rounded corners = 2pt]
+
+    \draw [-latex](0,0.5) coordinate(dd)-- (0,0) coordinate (O1) --
+    (0,-5)coordinate(ff) node[left]{$t$}; \draw [dashed,thick] (O1) --
+    (1,0) coordinate(P_0) -- (3,0) coordinate(P_1) --
+    ++(1,0)coordinate(ff2);
+
+    \foreach \nn in{P_0,P_1}{
+      \draw [thick] (dd-|\nn) node[above]{$\nn$}-- (\nn|-ff);
+    }
+
+    \foreach \xx in{-1,-2,...,-4}{
+      \draw[dashed] (0,\xx) -- ( ff2 |-0,\xx);
+    }
+
+    \foreach \xx in{0,20,40}{
+      \draw[dashed] (0.2, -\xx/10) -- (-0.2, -\xx/10) node[left]{\xx};
+    }
+
+    \begin{scope}[shift={(P_0)}]
+      \node[ right=0.4cm and 0.4cm of P_0,below,draw, minimum
+      width=0.8cm,minimum height=2cm,fill=white](n4a) {$v_1$};
+      \draw[-latex,thick] (n4a.south east) --node[above]{$e_1$} ++(1.2,-1);
+
+      \node[below=0cm of n4a,below,draw, minimum width=0.8cm,minimum
+      height=2cm,fill=white](n3b) {$v_2$};
+
+      \node[dashed, below=0cm of n3b,below,draw, minimum width=0.8cm,minimum
+      height=1cm](n3b) {};
+    \end{scope}
+
+    \begin{scope}[shift={(P_1)}]
+      \node[dashed, right=0.4cm  of P_1,below,draw, minimum width=0.8cm,minimum
+      height=1cm](n3b) {};
+
+      \coordinate(n0s) at (0,-3); \node[ right=0.4cm and 0.4cm of
+      n0s,below,draw, minimum width=0.8cm,minimum
+      height=1cm,fill=white](n3a) {$v_3$};
+
+      \node[dashed, below=0cm of n3a,below,draw, minimum width=0.8cm,minimum
+      height=1cm](n3b) {};
+    \end{scope}
+
+  \end{tikzpicture}
+  \caption{Insertion approach explanation}
+  \label{fig:static_scheduling}
+\end{figure}
+
+Figure~\ref{fig:static_scheduling} shows an example of assignment of
+the jobs the PEs. Here $P_i$ are the PEs, $v_i$ are the computational
+jobs, $e_1$ is the communication job. Jobs $v_2$ and $v_3$ depend on
+the job $v_1$, thus they ought to be executed after $v_1$
+completes.
+
+From the figure we can see that up to the time $30$ $P_1$ has no job
+running. Consider, that next job to be scheduled is job $v_4$, which
+has no data dependencies. Possible time slots for these jobs are
+marked with dashed boxes. With simple variant of static algorithm it
+is going to be scheduled to either $P_0$ or $P_1$ at time $40$. But
+with insertion approach algorithm is capable to allocate time slot at
+time 0 on $P_1$.
+
+\subsection{Dynamic list scheduling}
 \label{sec:dynamic}
 
-\subsection{Lookahead algorithms}
-\label{sec:lookahead_state}
+Dynamic list scheduling algorithms are the extension of static list
+scheduling algorithms. Dynamic list scheduling algorithms may differ
+priority queue of the jobs while constructing it. This happens,
+because after adding new node the metric used to assign priorities
+should be recalculated for all the nodes that are already in priority
+list. Thus, static list scheduling algorithm gets an additional step
+in priority queue construction~\cite{kwok1999static}:
 
-\cite{arabnejad2014list} \cite{bittencourt2010dag}
+\begin{enumerate}
+\item Determine new priorities of all unscheduled jobs;
+\item Select the job with the highest priority for scheduling;
+\item Allocate the node to the processor that allows earliest start
+  time.
+\end{enumerate}
 
-\begin{quote}
-  In a recent study [16], it was observed that the per- formance of a
-  commonly cited list scheduling heuristic, HEFT [14], is affected
-  significantly by the approach fol- lowed to assign weights to the
-  nodes and edges of the graph.  In an extreme case, the makespan that
-  HEFT returned for a certain graph was
-  47.2% worse than the makespan that
-  would be obtained if a different approach to compute the weights of
-  the nodes and edges of the graph was cho- sen \cite{zhao2003experimental}.
-\end{quote}
+Dynamic scheduling has a potential to generate better schedule than
+static one, but as drawback it requires continuous recalculation of
+priorities for the priority queue, thus increasing time complexity of
+the algorithm.
+
+% \subsection{Lookahead algorithms}
+% \label{sec:lookahead_state}
+
+
+% \cite{arabnejad2014list} Just quotation . Looks good worth to mention.
+
+% \cite{bittencourt2010dag}
+
+% \cite{wang2009} What he calls "lookahead" there?!
+
+% \begin{quote}
+%   In a recent study [16], it was observed that the per- formance of a
+%   commonly cited list scheduling heuristic, HEFT [14], is affected
+%   significantly by the approach fol- lowed to assign weights to the
+%   nodes and edges of the graph.  In an extreme case, the makespan that
+%   HEFT returned for a certain graph was
+%   47.2% worse than the makespan that
+%   would be obtained if a different approach to compute the weights of
+%   the nodes and edges of the graph was cho- sen \cite{zhao2003experimental}.
+% \end{quote}
+
+\subsection{DAG parameters}
+\label{sec:parameters}
+
+Before describing concrete algorithm we define some important
+parameters of the DAGs, which are used to rank the jobs. Formally,
+directed acyclic graph $\mathcal{G}=(\mathcal{V}, \mathcal{E})$
+consists of set of nodes $\mathcal{V}$ and set of edges
+$\mathcal{E}$. Nodes $v_i \in \mathcal{V}$ represent jobs and edges
+$e_{i, j} \in \mathcal{E}$ represent communication operations. To
+represent number size of set $\mathcal{V}$ we use symbol $v$. To
+represent size of set $\mathcal{E}$ we use symbol $e$. Execution
+environment consists of set $\mathcal{P}$ of interconnected processor
+elements, where $p_i \in \mathcal{P}$ are elements of the set. Number
+of PEs in set $\mathcal{P}$ we represent with symbol
+$p$. Figure~\ref{fig:dag_structure} shows an example of a DAG which
+models a parallel program. For the sake of brevity some of edge labels
+are missed in the figure.
+
+Dependencies of the job are designated by operators $pred(v_i)$ and
+$succ(v_i)$. Operator $pred(v_i)$ returns a list of the jobs which put
+data dependency on job $v_i$. Every node except entry node has at
+least one parent. Operator $succ(v_i)$ return a list of the jobs which
+execution depends on the node $v_i$. When a node is scheduled operator
+$p(v_i)$ returns a PE which a node was scheduled to.
+
+To designate communication and computation costs we use operator
+$w(x)$. Computation costs of job $v_i$ are $w(v_i)$. Communication
+costs of data transfer from job $v_i$ to job $v_j$ are $w(e_{i, j})$.
+If jobs $v_i$ and $v_j$ are scheduled to the same PE,
+$w(e_{i, j}) = 0$.
+
+Without loss of generality we can assume that a DAG has only one entry
+node and only one exit node. All the nodes, except entry and exit
+nodes, and edges, except edges incident to entry or exit nodes, have
+positive weights. Entry and exit nodes, as well as edges incident to
+entry and exit nodes are allowed to have zero weights.
+
+We can emphasize following DAG attributes.
+
+\begin{description}
+\item[s-level] (stands for \emph{static level}) of a node $v_i$ is the
+  length of the longest path from node $v_i$ to the exit node,
+  including the weight of $v_i$. S-level does not consider
+  communication costs, thus it does not depend on particular
+  schedule. In Figure~\ref{fig:dag_structure} nodes, encompassed in
+  b-level of the node $v_6$ are circled in light gray color. A
+  recurrent relation for b-level is following:
+
+\[
+sl(v_i) =
+  \begin{dcases}
+    \max_{v_j \in succ(v_i)}(sl(v_j)) + w(v_i),& \text{if } succ(v_i) \neq \emptyset\\
+    w(v_i), & \text{if } succ(v_i) = \emptyset
+  \end{dcases}
+\]
+
+\item[Static t-level] (stands for \emph{static top level}) of a node
+  $v_i$ is the length of the longest path from the entry node to a
+  node $v_i$, excluding the weight of $v_i$. Static t-level includes
+  all communication costs and computed before schedule is
+  created. Thus st-level computation does not consider possibility to
+  nullify communication costs, when dependant jobs run on the same
+  PE. In Figure~\ref{fig:dag_structure} nodes, encompassed in t-level
+  of the node $v_6$ are circled in dark gray color. A recurrent
+  relation for t-level is following:
+\[
+stl(v_i) =
+  \begin{dcases}
+    \max_{v_j \in pred(v_i)}(stl(v_j) + w(e_{v_j,v_i})),& \text{if } pred(v_i) \neq \emptyset\\
+    0, & \text{if } pred(v_i) = \emptyset
+  \end{dcases}
+\]
+
+\item[Static b-level] (stands for \emph{static bottom level}) of a
+  node $v_i$ is the length of the longest path from node $v_i$ to the
+  exit node, including the weight of $v_i$. Computation of static
+  b-level includes communication costs in the same way as with
+  t-level. In Figure~\ref{fig:dag_structure} nodes, encompassed in
+  b-level of the node $v_6$ are circled in light gray color. A
+  recurrent relation for b-level is following:
+
+\[
+sbl(v_i) =
+  \begin{dcases}
+    \max_{v_j \in succ(v_i)}(sbl(v_j) + w(e_{v_j,v_i})) + w(v_i),& \text{if } succ(v_i) \neq \emptyset\\
+    w(v_i), & \text{if } succ(v_i) = \emptyset
+  \end{dcases}
+\]
+
+\item[Total work] ($\mathcal{W}$) is total complexity of all jobs in
+  the DAG. If all nodes are scheduled to the same PE, the length of
+  the resulting schedule is equal to total work. The formula to
+  calculate total work is following:
+
+\[
+\mathcal{W} = \sum_{v_i \in \mathcal{G}}(w(v_i))
+\]
+
+\item[Critical path] ($CP$) designates the length of the longest path
+  from the entry node to the exit node. A DAG can have several
+  critical paths. Critical path length equals to s-level of an entry
+  node. Critical path is an important parameter of a DAG, because it
+  shows the lower limit of any possible schedule length: even with
+  unbounded amount of PEs execution can't take less than execution of
+  critical path requires. Critical path also can include communication
+  costs existing between the nodes in critical path, but in this case,
+  critical path length is not minimal possible schedule length. In
+  Figure~\ref{fig:dag_structure} critical path is shown with thick
+  arrows.
+\end{description}
+
+\begin{figure}[h]
+  \centering
+
+  \begin{tikzpicture}[scale=0.8]
+    \tikzset{shift={(current page.center)},yshift=3cm,xshift=3cm}
+    \tikzset{blevel/.style ={opacity=.3,line width=0.8cm,line
+        cap=round,color=lightgray,line join=round}}
+    \tikzset{tlevel/.style ={opacity=.3,line width=0.8cm,line
+        cap=round,color=darkgray,dashed,line join=round}}
+
+    \node[vertex] (v1) at (0, 0)     {$v_1$};
+    \node[vertex] (v2) at (-1.5,-1)  {$v_2$};
+    \node[vertex] (v3) at (-1.5,-2.5){$v_3$};
+    \node[vertex] (v4) at (-1.5,-5)  {$v_4$};
+    \node[vertex] (v5) at (1.5,-1)   {$v_5$};
+    \node[vertex] (v6) at (1.5,-2.5) {$v_6$};
+    \node[vertex] (v7) at (0,-3.5)   {$v_7$};
+    \node[vertex] (v8) at (3,-3.5)   {$v_8$};
+    \node[vertex] (v9) at (1.5,-4.5) {$v_9$};
+    \node[vertex] (v10) at (4.5,-3.5) {$v_{10}$};
+    \node[vertex] (v11) at (1.5,-6)   {$v_{11}$};
+    \node[vertex] (v12) at (1.5,-7.5) {$v_{12}$};
+    % \node[right] at ($ (v6) + (0.3,0.3) $)  {$v_i$};
+
+    \graph [edge quotes={black,auto}] {
+      (v1)
+      ->[edge node={node[label,above left]{$e_{1,2}$}}] (v2)
+      ->[edge node={node[label,left]{$e_{2,3}$}}] (v3)
+      ->[edge node={node[label,left]{$e_{3,4}$}}] (v4)
+      ->[edge node={node[label,left]{$e_{4,12}$}}] (v12);
+      (v3)
+      ->[edge node={node[label,above]{$e_{3,7}$}}] (v7)
+      ->[edge node={node[label,below left]{$e_{7,9}$}}] (v9);
+
+      (v1) ->[ultra thick] (v5)
+      ->[ultra thick] (v6)
+      ->[edge node={node[label,above]{$e_{6,7}$}}] (v7);
+
+      (v6) ->[ultra thick] (v8)
+      ->[ultra thick] (v9)
+      ->[ultra thick]
+
+      (v11) ->[ultra thick] (v12);
+      (v5)
+      ->[edge node={node[label]{$e_{5,10}$}}]  (v10);
+
+      (v10)
+      ->[edge node={node[label]{$e_{10,11}$}}] (v11);
+    };
+
+    \draw [blevel]
+    ($(v6)$) --
+    ($(v8)$) --
+    ($(v9)$) --
+    ($(v12)$);
+
+    \draw[tlevel] ($(v1)$) -- ($(v5)$);
+  \end{tikzpicture}
+  \caption{DAG structure}
+  \label{fig:dag_structure}
+\end{figure}
+
+Parameters mentioned above do not depend on particular schedule which
+can assign jobs to PEs in different way. These parameters called
+\emph{static}. Some DAG parameters depend on concrete schedule, thus
+they also can be considered as schedule parameters or \emph{dynamic}
+parameters. Example of values for DAG parameters for a DAG in
+Figure~\ref{fig:dag_structure} is given in
+Table~\ref{tab:node_params}. Dynamic parameters are defined in next
+subsection.
+
+\begin{table}[h]
+  \centering
+  \begin{subtable}[t]{0.55\linewidth}
+  \centering
+    \begin{tabular}[h]{c | c c c c }
+      i     & $w(v_i)$ & $sl(v_i)$ & $sbl(v_i)$ & $stl(v_i)$ \\\hline
+      1     & 10 & 130 & 250 & 0    \\
+      2     & 20 & 110 & 200 & 40   \\
+      3     & 20 & 90  & 170 & 70   \\
+      4     & 40 & 60  & 70  & 100  \\
+      5     & 10 & 120 & 230 & 20   \\
+      6     & 30 & 110 & 200 & 50   \\
+      7     & 20 & 70  & 140 & 100  \\
+      8     & 30 & 80  & 150 & 100  \\
+      9     & 10 & 50  & 110 & 140  \\
+      10    & 30 & 70  & 120 & 40   \\
+      11    & 20 & 40  & 60  & 190  \\
+      12    & 20 & 20  & 20  & 230  \\\hline\hline
+            &$CP$      &&     & 130 \\
+            &$\mathcal{W}$ && & 280
+    \end{tabular}
+    \caption{Node parameters}
+    \label{tab:node_params}
+  \end{subtable}
+  \begin{subtable}[t]{0.35\linewidth}
+  \centering
+    \begin{tabular}[h]{c | c  }
+                & $w(e_{i,j})$ \\\hline
+      $e_{1,2}$  & 30 \\
+      $e_{1,5}$  & 10 \\
+      $e_{2,3}$  & 10 \\
+      $e_{3,4}$  & 10 \\
+      $e_{3,7}$  & 10 \\
+      $e_{4,12}$ & 10 \\
+      $e_{5,6}$  & 20 \\
+      $e_{5,10}$ & 10 \\
+      $e_{6,7}$  & 20 \\
+      $e_{6,8}$  & 20 \\
+      $e_{7,9}$  & 10 \\
+      $e_{8,9}$  & 10 \\
+      $e_{9,11}$ & 40 \\
+      $e_{10,11}$& 30 \\
+      $e_{11,12}$& 20 \\
+    \end{tabular}
+    \caption{Edge parameters}
+    \label{tab:edge_params}
+  \end{subtable}
+  \caption{DAG parameters}
+  \label{tab:dag_params}
+\end{table}
+
+\subsection{Schedule parameters}
+\label{sec:sched_params}
+
+Schedule is a mapping of the jobs of a parallel application to
+timeslots of PEs, which respect system model constraints. A scheduling
+algorithm performs assignment of the jobs to timeslots of PEs. An
+example of schedule of a DAG from Figure~\ref{fig:dag_structure} with
+parameters from Table~\ref{tab:node_params} presented in
+Figure~\ref{fig:sched_param}.
+
+\begin{description}
+
+\item[Start time] of a node within particular schedule is designated
+  as $ST(v_i)$.
+\item[Finish time] of a node within particular schedule is designated
+  as $FT(v_i)$. Between start time and finish time holds following
+  relation:
+
+\[
+FT(v_i) = ST(v_i) + w(v_i)
+\]
+
+\item[Makespan] denotes finish time of the exit node. Also called
+  \emph{schedule length}.
+
+\item[Dynamic t-level] (stands for \emph{dynamic top level}) of a node
+  $v_i$ on a PE $P_i$ is the length of the longest path from the entry
+  node to a node $v_i$, excluding the weight of $v_i$. Dynamic t-level
+  designates earliest possible start time of a node $v_i$, when parent
+  nodes of the node $v_i$ already scheduled.
+\[
+tl(v_i) =
+  \begin{dcases}
+    \max_{v_j \in pred(v_i)}(FT(v_i) + w(e_{v_i,v_j})),& \text{if } pred(v_i) \neq \emptyset\\
+    0, & \text{if } pred(v_i) = \emptyset
+  \end{dcases}
+\]
+
+Dynamic t-level computed within a context of particular schedule,
+meaning that if $p(v_i) = p(v_j)$, then $w(e_{v_i, v_j}) = 0$. Dynamic
+t-level does not consider availability of a PE ready for execution of
+the node $v_i$, hence actual earliest possible time can be bigger.
+
+\item[Dynamic b-level] (stands for \emph{dynamic bottom level}) of a
+  node $v_i$ on a PE $P_i$ is the length of the longest path from node
+  $v_i$ to the exit node, including the weight of $v_i$. Dynamic
+  b-level computed as follows.
+
+\[
+bl(v_i) =
+  \begin{dcases}
+    \max_{v_j \in succ(v_i)}(bl(v_j)  + w(e_{v_j,v_j})) + w(v_i),& \text{if } succ(v_i) \neq \emptyset\\
+    w(v_i), & \text{if } succ(v_i) = \emptyset
+  \end{dcases}
+\]
+
+\item[Critical path] also can be considered as a dynamic attribute. In
+  this case it is the longest path in a schedule from entry to exit
+  node and equals to dynamic b-level of an entry node. As with dynamic
+  b-level, critical path length can change depending of mutual
+  placement of adjacent nodes comprising critical path. Even nodes
+  encompassed in critical path can change for different
+  schedules. Here and after when say about critical path we assume
+  dynamic critical path, if the opposite is not mentioned.
+
+\item[Activity] ($f(\tau_i, t)$) of a node $v_i$ indicates whether a
+  job is being executed at time $t$.
+
+\[
+f(\tau_i, t) = 
+\begin{dcases}
+  1, & t \in 
+  \left[
+    \tau_i - w(v_i), \tau_i
+  \right] \\
+  0, & \text{otherwise}
+\end{dcases}
+\]
+
+\item[Ready time] ($R_i(v_j)$) of a PE $p_i$ means earliest possible
+  time, when a PE can run job of size $w(v_j)$. For example, ready
+  time $R_2(v_4)$ in the schedule in Figure~\ref{fig:sched_param}
+  equals $60$, assuming only node $v_{10}$ already scheduled.
+
+\item[Earliest Start Time] ($EST(v_i, p_j)$) refers to earliest
+  possible execution time of a node $v_i$ on a PE $p_j$, with respect
+  to both dynamic t-level of node $v_i$ and ready time of PE $p_j$.
+
+\[
+EST(v_i, p_j) = \max(tl(v_i), R_j(v_i))
+\]
+
+\item[Earliest Finish Time] ($EFT(v_i, p_j)$) refers to earliest
+  possible finish time of a node $v_i$ on a PE $p_j$. Between EST and
+  EFT following relation holds.
+
+\[
+EFT(v_i, p_j) = EST(v_i, p_j) + w(v_i)
+\]
+
+\item[Actual Finish Time] (AFT) is time when node $v_i$ completes its
+  job within particular schedule. We represent actual finish time of
+  node $v_i$ as $AFT(v_i)$. Between parents' AFT and children EFT
+  holds following relation:
+
+\[
+EFT(v_i, p_j) = \max 
+\left\{
+  R_j(v_i), \max_{v_k \in pred(v_i)}(AFT(v_k) + w(e(v_i, v_k))
+\right\}
+\]
+
+\item[As-late-as-possible] ($ALAP$) is a metric which indicates how
+  much the node's start time can be delayed without increasing of
+  total schedule length. Nodes on a critical path have zero $ALAP$
+  values. $ALAP$ is computed according to following formula:
+
+\[
+ALAP(v_i) = 
+\begin{dcases}
+   \min_{v_j \in succ(v_i)}(ALAP(v_j) - w(e_{v_i, v_j})) - w(v_i),  &  \text{if } succ(v_i) \neq \emptyset\\
+   CP - w(e_{v_i, v_j}), &  \text{if } succ(v_i) = \emptyset
+ \end{dcases}
+\]
+
+\end{description}
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}[yscale=1,transform shape, rounded corners = 2pt]
+
+    \draw [-latex](0,0.5) coordinate(dd)-- (0,0) coordinate (O1) --
+    (0,-16/2)coordinate(ff) node[left]{$t$};
+
+    \draw [dashed,thick] (O1) --
+    (1,0) coordinate(P_0) -- (3,0) coordinate(P_1) -- (5,0)coordinate(P_2) --
+    ++(1,0)coordinate(ff2);
+
+    \foreach \nn in{P_0,P_1,P_2}{
+      \draw [thick] (dd-|\nn) node[above]{$\nn$}-- (\nn|-ff);
+    }
+
+    \foreach \xx in{-2,-4,...,-14}{
+      \draw[dashed] (0,\xx / 2) -- ( ff2 |-0,\xx / 2);
+    }
+
+    \foreach \xx in{0,20,...,140}{
+      \draw[dashed] (0.2, -\xx/20) -- (-0.2, -\xx/20) node[left]{\xx};
+    }
+
+    \begin{scope}[shift={(P_0)}]
+      \coordinate(p0s) at (0.4,0);
+      \node[slot={1}{p0s}](v1){$v_1$};
+      \node[slot={1}{v1}](v5) {$v_5$};
+      \node[slot={3}{v5}](v6) {$v_6$};
+      \node[slot={3}{v6}](v8) {$v_8$};
+      \coordinate(e79) at (0.4, -10/2);
+      \node[slot={1}{e79}](v9) {$v_9$};
+      \node[slot={2}{v9}](v11) {$v_{11}$};
+      \node[slot={2}{v11}](v12) {$v_{12}$};
+
+    \end{scope}
+
+    \begin{scope}[shift={(P_1)}]
+      \coordinate(p1s) at (0.4,-4/2);
+      \node[slot={1}{p1s}](v2){$v_2$};
+      \node[slot={2}{v2}](v3){$v_3$};
+      \node[slot={2}{v3}](v7){$v_7$};
+    \end{scope}
+
+    \begin{scope}[shift={(P_2)}]
+      \coordinate(p2s) at (0.4,-3/2);
+      \node[slot={3}{p2s}](v10){$v_{10}$};
+      \coordinate(e34) at (0.4,-8/2);
+      \node[slot={4}{e34}](v4){$v_4$};
+    \end{scope}
+
+    \draw[-latex,thick] (v1.south east) -- (v2.north west);
+    \draw[-latex,thick] (v3.south east) -- (v4.north west);
+    \draw[-latex,thick] (v5.south east) -- (v10.north west);
+    \draw[-latex,thick] (v6.south east) -- (v7.north west);
+
+    \draw[-latex,thick] (v4.south west) -- (v12.north east);
+    \draw[-latex,thick] (v7.south west) -- (v9.north east);
+    \draw[-latex,thick] (v10.south west) -- (v11.north east);
+  \end{tikzpicture}
+  \caption{Schedule example}
+  \label{fig:sched_param}
+\end{figure}
+
+Schedule is \emph{optimal} if it has the best possible evaluation
+parameters among other schedules within given number of PEs. Although
+various \emph{objective} parameters are possible, typically
+\emph{makespan} is used. This includes our work too. Since optimality
+is not practical comparison criteria for various algorithms, we
+compare their \emph{performance}, meaning how good their objective
+parameters are. In our case, the algorithm having better performance,
+is the one producing schedule with smaller makespan.
+
+\section{Selected algorithms}
+\label{sec:selected}
+
+In this section we presented several signature algorithm, which are
+also popular in benchmarks. First, we outline dynamic algorithms in
+Sections~\ref{sec:min_min}-\ref{sec:delay_sched}. Afterwards we
+present list scheduling algorithms.
+
+\subsection{Min-min algorithm}
+\label{sec:min_min}
+
+Min-min algorithm explained here~\cite{maheswaran1999dynamic}
+\todo{Do I need this?}
+
+\subsection{Sufferage algorithm}
+\label{sec:sufferage}
+
+Sufferage algorithm presented here~\cite{maheswaran1999dynamic}
+\todo{Do I need this?}
+
+\subsection{Delay scheduling}
+\label{sec:delay_sched}
+
+\cite{zaharia2010delay} propose an interesting dynamic algorithm for clusters
+\todo{Do I need this?}
+
+\subsection{HLFET algorithm}
+\label{sec:hlfet}
+
+HLFET is one of the simplest list scheduling algorithms, proposed
+by~\citeauthor{adam1974}~\cite{adam1974}. HLFET stands for highest
+levels first with estimated times, meaning that the algorithm
+priorities the node list according to their s-level. "With estimated
+times" means that estimated times for node weights are known. The
+algorithm itself is oblivious to communication costs.
+
+We use description of HLFET algorithm given
+by~\citeauthor{kwok1999static}~\cite{kwok1999static}:
+
+\begin{enumerate}
+\item \label{hlfet_first} Calculate s-level of each node;
+\item \label{hlfet_repeat} Put nodes in a ready list according to descending order of their
+  s-levels. Initially the ready list contains only the entry node. If
+  nodes have the same s-level, ties are broken randomly;
+\item Schedule the top node in the ready list to a PE that allows
+  minimal EST. This algorithm does not use insertion heuristic;
+\item Update the ready list by inserting the nodes that are now ready.
+\item \label{hlfet_until} If ready list is not empty, go to
+  step~\ref{hlfet_repeat}. Algorithm is finished, otherwise.
+\end{enumerate}
+
+Complexity of the algorithm is defined by the loop within
+steps~\ref{hlfet_repeat}-~\ref{hlfet_until} plus complexity of
+step~\ref{hlfet_first}. Calculation of s-levels has complexity
+$O(v + e)$\todo{Do I need a proof or a ref?}. Complexity of
+step~\ref{hlfet_repeat} is $O(v)$, because we have to update ready
+list and thus we have to check up to $v$ nodes. Since,
+step~\ref{hlfet_repeat} repeats $v$ times, total complexity of the
+algorithm is $O(v^2)$.
+
+An example of a schedule produced by HLFET algorithm for DAG with
+structure from Figure~\ref{fig:dag_structure}, with parameters from
+Table~\ref{tab:dag_params}, presented in Figure~\ref{fig:sched_param}.
+
+\subsection{MCP algorithm}
+\label{sec:MCP}
+
+MCP stands for \emph{modified critical path}. This algorithm was
+originally proposed
+by~\citeauthor{wu1990hypertool}~\cite{wu1990hypertool}. Algorithm
+arranges nodes in a priority queue in descending order of their ALAP
+metric. MCP being popular and efficient algorithm, has many
+implementations. We cite \textbf{simplified} MCP algorithm, proposed by
+original authors in~\cite{wu2000mcp}. It has smaller asymptotic
+complexity, but practically the same performance as original MCP. The
+steps of the algorithm are:
+
+\begin{enumerate}
+\item Compute $ALAP$ metric for each node in a DAG;
+\item \label{mcp_sort}Put the nodes in the priority queue in ascending order of their
+  ALAP times. Ties are broken by the child that has the smallest ALAP
+  times. If children of contending nodes have the same minimal ALAP
+  times, ties are broken randomly;
+\item \label{mcp_loop} Pop a node from the priority queue and schedule
+  it to the PE that allows earliest start time, using the insertion
+  approach (see Sec.~\ref{sec:static}). Repeat step~\ref{mcp_loop}
+  until priority queue gets empty.
+\end{enumerate}\todo{I cite quite literally. Is it OK?}
+
+ALAP time is computed by traversing all the edges of the DAG, this
+step has complexity $O(e)$. Step~\ref{mcp_loop} performs sort
+according to ALAP values and has complexity $O(v \log{v})$. Complexity
+of step~\ref{mcp_loop} consists of two parts. In the first part
+$EST(v_i)$ is determined, by traversing all the parents of node
+$v_i$. This part has complexity $O(\left|pred(v_i)\right|)$ for a
+single node. For $v$ nodes the complexity is
+$\sum O(\left|pred(v_i)\right|) = O(e)$. Then scheduler look for a
+time slot for a node $v_i$ in partial schedule using insertion
+approach. This part has complexity $O(v)$, because number of possible
+time slots is less than the number of nodes. Step~\ref{mcp_loop}
+repeats $v$ times, resulting in $O(v^2)$ complexity. Total complexity
+of the algorithm is $O(e + v\log v + v^2)$ or $O(v^2)$, because
+$e < v^2$.
+
+\todo{Add example}
+
+\subsection{ETF algorithm}
+\label{sec:eft}
+
+ETF (Earliest Time First) algorithm was proposed by
+\citeauthor{hwang1989scheduling}~\cite{hwang1989scheduling}. The
+algorithm consists of following steps~\cite{kwok1999static}:
+
+\begin{enumerate}
+\item Compute static b-levels of all the nodes in the DAG;
+\item \label{etf_loop} Out of ready list take node $v_i$ which has the
+  lowest EST. Ties are broken by selecting the node with a higher
+  static b-level. Schedule node $v_i$ to corresponding processor
+  without insertion approach.
+\item Update ready queue with the nodes which dependencies are met
+  after $v_i$ is scheduled.
+\item If ready queue is not empty, go to step~\ref{etf_loop}.
+\end{enumerate}
+
+The time complexity of the algorithm is $O(p v^2)$ (see proof
+in~\cite{hwang1989scheduling}).
+
+\todo{Add an example}
+
+\subsection{HEFT algorithm}
+\label{sec:heft}
+
+HEFT (Heterogeneous earliest time first)
+algorithm~\cite{Topcuoglu2002} represent family of algorithms for
+heterogeneous systems. This class of algorithms is widespread in state
+of the art distributed systems.
+
+The system model differs from the one presented in
+Section~\ref{sec:model} in following aspects. Computation costs is not
+a single number $w(v_i)$ anymore, but a vector $w(v_i)$ of size
+$p$. Element $j$ of the vector $w(v_i)$ represents computation costs
+of a node $v_i$ on a PE $p_j$. We use $w(v_i, j)$ to represent
+computation costs of node $v_i$ on a PE $p_j$.
+
+Communication model consist of network of fully connected
+PEs. Communication cost built up of two network parameters:
+
+\begin{enumerate}
+\item Matrix $B$ of size $p \times p$ of data transfer rates. Element
+  $b_{i,j}$ from matrix $B$ shows data transfer rate from node $v_i$
+  to node $v_j$;
+\item Vector $L$ of size $p$ of latency created by PEs. Element $l_i$
+  from matrix $L$ designates the latency of PE $p_i$ in communication
+  operation.
+\end{enumerate}
+
+Weight of edges in the DAG, instead of time required for data
+transmit, now indicate size of data to be transmitted. Combining
+network parameters and edge weight, communication cost of transmitting
+message from node $v_i$ to node $v_j$ is
+
+\[
+c_{i,j} = L_{p(v_i)} + \frac{data_{i, j}}{b_{p(v_i),p(v_j)}}
+\]
+
+Given these parameters, computation of b-levels or t-levels has no
+sense anymore, because the longest path in a graph is not
+characterizing upper limit of schedule length. Thus other metric is
+used.
+
+First of all, computation and communication costs are aggregated into
+single value, to simplify ordering the nodes into priority list. We
+introduce mean computation costs of a node $v_i$:
+
+\[
+\mean{w_i} = \frac{\sum_{j=1}^p w(v_i,j)}{p}.
+\]
+
+\todo{I use here $w_i$, not $w(v_i)$, because I consider $w_i$ as a
+  variable, not an operator. ?}
+
+And mean communication costs of a node $v_i$:
+
+\[
+\mean{c_{i,j}} = \mean{L} + \frac{data_{i,j}}{\mean{B}},
+\]
+
+where $\mean{L}$ is average communication latency and $\mean{B}$ is
+average bandwidth among all PEs in the system. Most of parameters
+defined in Section~\ref{sec:sched_params} calculated in the same way,
+but with respect to which PEs run specific node and which
+communication channels are used.
+
+To arrange tasks in a priority list, algorithm uses for each node
+\emph{upward rank}. It is important to note, that task ordered by
+upward rank are also ordered topologically. The upward rank is defined
+by
+
+\[
+r(v_i) =
+\begin{dcases}
+  \mean{w_i} + \max_{v_j \in succ(v_i)}(\mean{c_{i,j}} + r(v_j)),  &  \text{if } succ(v_i) \neq \emptyset\\
+  \mean{w_i},  &  \text{if } succ(v_i) = \emptyset
+\end{dcases}
+\]
+
+The algorithm steps are following
+
+\begin{enumerate}
+\item Arrange nodes in a priority queue according to nonincreasing
+  order of their upward ranks. Ties are broken randomly;
+\item \label{heft_loop} Pop the first node from the priority queue and
+  compute EFT for each PE, using insertion approach;
+\item Schedule node to the PE, which allows earliest finish time.
+\item If priority queue is not empty, go to step~\ref{heft_loop}.
+\end{enumerate}
+
+The HEFT algorithm has $O(v\times p)$ complexity. For a dense graph
+where number of edges is proportional to $O(v^2)$, the time complexity
+is $O(v^2 \times p)$.
+
+\todo{An example. Better to conjunct with lookahead }
+
+\subsection{Lookahead HEFT algorithm}
+\label{sec:heft_lookahead}
+
+An extension of classical HEFT algorithm was proposed by
+\citeauthor{bittencourt2010dag} in \cite{bittencourt2010dag}. The HEFT
+algorithm assigns jobs to PEs, considering only one task at a time,
+ignoring any consequences of such decision. As illustrates
+Figure~\ref{fig:none}
+
+\todo{How many versions of lookahead should I describe? Four were
+  proposed. At most one I'm going to take.}
+
+\todo{Can I take the example from original paper?}
+
+
 \cleardoublepage
 
 %%% Local Variables:

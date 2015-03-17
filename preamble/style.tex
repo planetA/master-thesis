@@ -47,3 +47,45 @@
 
 % use nice footnote indentation
 \deffootnote[1em]{1em}{1em}{\textsuperscript{\thefootnotemark}\,}
+
+\usetikzlibrary{
+  shapes,
+  arrows,
+  fit,
+  calc,
+  positioning,
+  graphs,
+  trees,
+  chains,
+  calc,
+  quotes
+}
+
+
+\tikzset{
+  vertex/.style={circle,draw, fill=none, radius=100,minimum size = 15pt,inner sep=1pt},
+  current/.style={circle,draw, fill=none, radius=100,minimum size = 15pt,inner sep=1pt},
+  next/.style = {
+    circle,draw,
+    fill=yellow!30,
+    radius=100,
+    minimum size = 15pt,
+    inner sep=1pt
+  },
+  future/.style = {
+    circle,draw,
+    fill=green!30,
+    radius=100,
+    minimum size = 15pt,
+    inner sep=1pt
+  },
+  fogged/.style={circle,fill=none, radius=100,minimum size = 9pt,inner sep=1pt},
+  label/.style={auto,draw=none,fill=none,color=black},
+  slot/.style 2 args= {
+    minimum width=0.8cm,
+    fill=white,
+    draw,
+    below=0cm of #2,
+    minimum height=#1cm / 2,
+  },
+}
